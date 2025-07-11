@@ -3,9 +3,11 @@ package com.linktic.prueba.productos.config;
 import com.linktic.prueba.productos.security.ApiKeyInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration
+@Profile("!test")
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired

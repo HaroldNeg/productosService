@@ -13,11 +13,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linktic.prueba.productos.dto.ProductoRequest;
 import com.linktic.prueba.productos.dto.ProductoResponse;
+import com.linktic.prueba.productos.model.Producto;
 import com.linktic.prueba.productos.service.ProductoService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SuppressWarnings("removal")
 @WebMvcTest(controllers = ProductoController.class)
+@ActiveProfiles("test")
 public class ProductoControllerTest {
 	@Autowired
     private MockMvc mockMvc;
@@ -155,5 +158,55 @@ public class ProductoControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data").isArray())
             .andExpect(jsonPath("$.data[0].nombre").value("Producto"));
+    }
+    
+    @Test
+    void buscar_producto_por_nombre_o_codigo_devuelve_200() throws Exception {
+        ProductoResponse producto = new ProductoResponse(UUID.randomUUID(), "Test", "ABC123", 1000.0, 5);
+        Mockito.when(service.consultar("ABC123", "Test")).thenReturn(producto);
+
+        mockMvc.perform(get("/api/productos/buscar")
+                .param("codigoBarras", "ABC123")
+                .param("nombre", "Test"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data[0].nombre").value("Test"));
+    }
+    
+    @Test
+    void verificar_producto_valido_devuelve_200() throws Exception {
+        Producto producto = new Producto();
+        producto.setId(UUID.randomUUID());
+        producto.setNombre("Producto Verificado");
+        producto.setCodigoBarras("987654");
+        Mockito.when(service.consultarInterno("987654", 2)).thenReturn(producto);
+
+        mockMvc.perform(get("/api/productos/verificar")
+                .param("codigoBarras", "987654")
+                .param("cantidad", "2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nombre").value("Producto Verificado"));
+    }
+    
+    @Test
+    void separar_producto_existente_devuelve_204() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(put("/api/productos/{id}/separar", id)
+                .param("cancela", "false")
+                .param("cantidad", "3"))
+            .andExpect(status().isNoContent());
+
+        Mockito.verify(service).SeparaInventario(id, false, 3);
+    }
+    
+    @Test
+    void modificar_producto_existente_devuelve_204() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(put("/api/productos/{id}/modificar", id)
+                .param("cantidad", "2"))
+            .andExpect(status().isNoContent());
+
+        Mockito.verify(service).ModificarInventario(id, 2);
     }
 }

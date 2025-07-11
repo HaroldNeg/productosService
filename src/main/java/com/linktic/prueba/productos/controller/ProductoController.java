@@ -42,24 +42,45 @@ public class ProductoController {
 	private ProductoService service;
 	
 	@GetMapping("/buscar")
-	public JsonApiResponse<ProductoResponse> buscar(@RequestParam String codigoBarras, @RequestParam String nombre) {
+	@Operation(summary = "busca productos", description = "Retorna una producto que tenga el nombre y/o el codigo de barras")
+	public JsonApiResponse<ProductoResponse> buscar(
+			@Parameter(description = "Busca por codigo de barras") @RequestParam String codigoBarras, 
+			@Parameter(description = "Busca por nombre") @RequestParam String nombre
+	) {
 	    ProductoResponse response = service.consultar(codigoBarras, nombre);
         return new JsonApiResponse<>(List.of(response), null, null);
 	}
 	
 	@GetMapping("/verificar")
-	public Producto verificar(@RequestParam String codigoBarras, @RequestParam  int cantidad) {
+	@Operation(summary = "verificar productos", description = "Retorna el producto si existe por codigo de barras y que la cantidad no supere el stock")
+	@ApiResponse(responseCode = "200", description = "Producto encontrado")
+	@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	@ApiResponse(responseCode = "409", description = "La cantidad supera el stock - la cantidad separada")
+	public Producto verificar(
+			@Parameter(description = "Busca por codigo de barras") @RequestParam String codigoBarras, 
+			@Parameter(description = "Cantidad no supere el stock") @RequestParam  int cantidad) {
 		return service.consultarInterno(codigoBarras, cantidad);
 	}
 	
 	@PutMapping("/{id}/separar")
-	ResponseEntity<?> separaInventario(@PathVariable UUID id, @RequestParam boolean cancela, @RequestParam int cantidad){
+	@Operation(summary = "separa productos", description = "Separa los productos de una compra pendiente")
+	@ApiResponse(responseCode = "200", description = "Producto separado por la cantidad indicada")
+	@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	ResponseEntity<?> separaInventario(@PathVariable UUID id, 
+			@Parameter(description = "Si no cancela, separa del stock, Si cancela, retorna la cantidad separada al stock") @RequestParam boolean cancela, 
+			@Parameter(description = "indica cuantos productos se separan o se devuelven al stock") @RequestParam int cantidad
+	){
 		service.SeparaInventario(id, false, cantidad);
 		return ResponseEntity.noContent().build();
 	}
 	
 	@PutMapping("/{id}/modificar")
-	ResponseEntity<?> modificaInventario(@PathVariable UUID id, @RequestParam int cantidad){
+	@Operation(summary = "separa productos", description = "Modifica el stock de un producto de una compra finalizada")
+	@ApiResponse(responseCode = "200", description = "Producto modificado en stock por la cantidad indicada")
+	@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	ResponseEntity<?> modificaInventario(@PathVariable UUID id, 
+			@Parameter(description = "indica cuantos productos se restan al stock y a la cantidad de productos separada") @RequestParam int cantidad
+	){
 		service.ModificarInventario(id, cantidad);
 		return ResponseEntity.noContent().build();
 	}
