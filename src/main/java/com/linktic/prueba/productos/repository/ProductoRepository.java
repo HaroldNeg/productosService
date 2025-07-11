@@ -27,7 +27,7 @@ public interface ProductoRepository extends JpaRepository<Producto, UUID>{
 	@Query("""
 	        SELECT p FROM Producto p
 	        WHERE (:nombre IS NULL OR UPPER(p.nombre) LIKE CONCAT('%', UPPER(CAST(:nombre AS string)), '%'))
-	        AND (:codigoBarras IS NULL OR p.codigoBarras = :codigoBarras)
+	        OR (:codigoBarras IS NULL OR p.codigoBarras = :codigoBarras)
 			""")
 	Optional<Producto> findByCodigoYNombre(@Param("codigoBarras")String codigoBarras, @Param("nombre") String nombre);
 }

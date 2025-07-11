@@ -27,8 +27,8 @@ public class ProductoServiceImpl implements ProductoService{
 
 	@Override
 	public Page<ProductoResponse> listar(String nombre, String codigoBarras, Pageable pageable) {
-		if(nombre.isEmpty()) nombre = null;
-		if(codigoBarras.isEmpty()) codigoBarras = null;
+		if(nombre != null && nombre.isEmpty()) nombre = null;
+		if(codigoBarras != null && codigoBarras.isEmpty()) codigoBarras = null;
 		return repository
 				.findAllFilter(nombre, codigoBarras, pageable)
 				.map(producto -> mapper.map(producto, ProductoResponse.class));

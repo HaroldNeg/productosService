@@ -19,6 +19,7 @@ import com.linktic.prueba.productos.dto.ErrorResponse;
 import com.linktic.prueba.productos.exception.ConflictException;
 import com.linktic.prueba.productos.exception.ResourceNotFoundException;
 
+import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
@@ -59,7 +60,6 @@ public class GlobalExceptionHandler {
         if (error.contains("ya existe la llave (codigo_barras)")) msg = "Ya existe un producto con ese código de barras.";
         return buildError("409", "Conflict", msg, HttpStatus.CONFLICT);
     }
-
 
 	// 422
 	@ExceptionHandler(MethodArgumentNotValidException.class)
