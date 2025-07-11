@@ -23,4 +23,11 @@ public interface ProductoRepository extends JpaRepository<Producto, UUID>{
 	Page<Producto> findAllFilter(@Param("nombre") String nombre, @Param("codigoBarras") String codigoBarras, Pageable pageable);
 	
 	Optional<Producto> findByCodigoBarras(String codigoBarras);
+
+	@Query("""
+	        SELECT p FROM Producto p
+	        WHERE (:nombre IS NULL OR UPPER(p.nombre) LIKE CONCAT('%', UPPER(CAST(:nombre AS string)), '%'))
+	        AND (:codigoBarras IS NULL OR p.codigoBarras = :codigoBarras)
+			""")
+	Optional<Producto> findByCodigoYNombre(@Param("codigoBarras")String codigoBarras, @Param("nombre") String nombre);
 }

@@ -1,6 +1,7 @@
 package com.linktic.prueba.productos.controller;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,9 +21,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.linktic.prueba.productos.dto.PaginaApiResponse;
+import com.linktic.prueba.productos.dto.JsonApiResponse;
 import com.linktic.prueba.productos.dto.ProductoRequest;
 import com.linktic.prueba.productos.dto.ProductoResponse;
+import com.linktic.prueba.productos.model.Producto;
 import com.linktic.prueba.productos.service.ProductoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,9 +42,32 @@ public class ProductoController {
 	@Autowired
 	private ProductoService service;
 	
+	@GetMapping("/buscar")
+	public JsonApiResponse<ProductoResponse> buscar(@RequestParam String codigoBarras, @RequestParam String nombre) {
+	    ProductoResponse response = service.consultar(codigoBarras, nombre);
+        return new JsonApiResponse<>(List.of(response), null, null);
+	}
+	
+	@GetMapping("/verificar")
+	public Producto verificar(@RequestParam String codigoBarras, @RequestParam  int cantidad) {
+		return service.consultarInterno(codigoBarras, cantidad);
+	}
+	
+	@PutMapping("/{id}/separar")
+	ResponseEntity<?> separaInventario(@PathVariable UUID id, @RequestParam boolean cancela, @RequestParam int cantidad){
+		service.SeparaInventario(id, false, cantidad);
+		return ResponseEntity.noContent().build();
+	}
+	
+	@PutMapping("/{id}/modificar")
+	ResponseEntity<?> modificaInventario(@PathVariable UUID id, @RequestParam int cantidad){
+		service.ModificarInventario(id, cantidad);
+		return ResponseEntity.noContent().build();
+	}
+	
 	@GetMapping
 	@Operation(summary = "Listar productos", description = "Retorna una lista paginada de productos con filtros opcionales")
-    public PaginaApiResponse<ProductoResponse> listar(
+    public JsonApiResponse<ProductoResponse> listar(
     		@Parameter(description = "Filtro por nombre") @RequestParam(required = false) String nombre, 
     		@Parameter(description = "Filtro por código de barras") @RequestParam(required = false) String codigoBarras, 
     		Pageable pageable, 
@@ -58,9 +84,9 @@ public class ProductoController {
 		String next = pagina.hasNext() ? baseUrl + "?page=" + (pagina.getNumber() + 1) + "&size=" + pagina.getSize() + params : null;
 		String prev = pagina.hasPrevious() ? baseUrl + "?page=" + (pagina.getNumber() - 1) + "&size=" + pagina.getSize() + params : null;
 		
-		PaginaApiResponse.Meta meta = new PaginaApiResponse.Meta(pagina.getNumber(), pagina.getSize(), pagina.getTotalElements(), pagina.getTotalPages());
-		PaginaApiResponse.Links links = new PaginaApiResponse.Links(self, next, prev);
-        return new PaginaApiResponse<ProductoResponse>(pagina.getContent(), meta, links);
+		JsonApiResponse.Meta meta = new JsonApiResponse.Meta(pagina.getNumber(), pagina.getSize(), pagina.getTotalElements(), pagina.getTotalPages());
+		JsonApiResponse.Links links = new JsonApiResponse.Links(self, next, prev);
+        return new JsonApiResponse<ProductoResponse>(pagina.getContent(), meta, links);
     }
 	
 	@GetMapping("/{id}")

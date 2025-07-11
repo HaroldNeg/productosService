@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaginaApiResponse<T> {
+public class JsonApiResponse<T> {
 	private List<T> data;
 	private Meta meta;
 	private Links links;

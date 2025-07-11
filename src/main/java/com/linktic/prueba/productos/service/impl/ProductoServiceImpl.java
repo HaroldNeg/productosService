@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.linktic.prueba.productos.dto.ProductoRequest;
 import com.linktic.prueba.productos.dto.ProductoResponse;
+import com.linktic.prueba.productos.exception.ConflictException;
 import com.linktic.prueba.productos.model.Producto;
 import com.linktic.prueba.productos.repository.ProductoRepository;
 import com.linktic.prueba.productos.service.ProductoService;
@@ -61,4 +62,31 @@ public class ProductoServiceImpl implements ProductoService{
 		repository.deleteById(id);
 	}
 
+	@Override
+	public ProductoResponse consultar(String codigoBarras, String nombre) {
+		Producto producto = repository.findByCodigoYNombre(codigoBarras, nombre).orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+		producto.setStock(producto.getStock()-producto.getCompraTemporal());
+		return mapper.map(producto, ProductoResponse.class);
+	}
+	
+	public Producto consultarInterno(String codigoBarras, int cantidad) {
+		if(cantidad <= 0) throw new IllegalArgumentException("No se puede agregar cantidades iguales o inferiores a 0");
+		Producto producto = repository.findByCodigoBarras(codigoBarras).orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+		if ((producto.getStock() - producto.getCompraTemporal()) < cantidad) throw new ConflictException("No hay suficientes unidades del producto");
+		return producto;
+	}
+	
+	public void SeparaInventario(UUID id, boolean cancela, int cantidad) {
+		Producto producto = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+		if(cancela) producto.setCompraTemporal(producto.getCompraTemporal() - cantidad);
+		else producto.setCompraTemporal(producto.getCompraTemporal() + cantidad);
+		repository.save(producto);
+	}
+	
+	public void ModificarInventario(UUID id, int cantidad) {
+		Producto producto = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+		producto.setStock(producto.getStock() - cantidad);
+		producto.setCompraTemporal(producto.getCompraTemporal() - cantidad);
+		repository.save(producto);
+	}
 }
