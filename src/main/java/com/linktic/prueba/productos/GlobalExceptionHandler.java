@@ -19,7 +19,6 @@ import com.linktic.prueba.productos.dto.ErrorResponse;
 import com.linktic.prueba.productos.exception.ConflictException;
 import com.linktic.prueba.productos.exception.ResourceNotFoundException;
 
-import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
